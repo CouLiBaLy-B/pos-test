@@ -23,9 +23,11 @@ EXPECTED_FILES = [
     ROOT / "assistant_api" / "main.py",
     ROOT / "assistant_api" / "models.py",
     ROOT / "assistant_api" / "service.py",
+    ROOT / "assistant_api" / "static" / "index.html",
     ROOT / "config" / "claude" / "settings.json",
     ROOT / "docs" / "api.md",
     ROOT / "docs" / "architecture.md",
+    ROOT / "docs" / "merge-ready.md",
     ROOT / "docs" / "audit-vllm-claude.md",
     ROOT / "docs" / "models.md",
     ROOT / "docs" / "roadmap-v0.2.0.md",
@@ -116,6 +118,8 @@ def test_readme_mentions_test_and_setup_commands() -> None:
     assert "make test" in readme
     assert "http://localhost:8080/docs" in readme
     assert "/api/v1/chat" in readme
+    assert "/api/v1/chat/stream" in readme
+    assert "/v1/messages" in readme
     assert "sans LiteLLM" in readme
 
 
@@ -164,3 +168,18 @@ def test_roadmap_mentions_develop_and_v020() -> None:
     assert "Roadmap v0.2.0" in roadmap
     assert "develop" in roadmap
     assert "main" in roadmap
+
+
+def test_readme_mentions_ui_and_merge_ready() -> None:
+    readme = (ROOT / "README.md").read_text()
+
+    assert "Interface web minimale" in readme
+    assert "merge-ready" in readme.lower()
+
+
+def test_merge_ready_doc_mentions_pr_and_checks() -> None:
+    merge_doc = (ROOT / "docs" / "merge-ready.md").read_text()
+
+    assert "Checklist" in merge_doc
+    assert "develop" in merge_doc
+    assert "PR" in merge_doc

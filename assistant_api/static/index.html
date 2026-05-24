@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistant local</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #121a31;
+      --panel-2: #182241;
+      --border: #2a3b6b;
+      --text: #e8ecff;
+      --muted: #9fb0e3;
+      --accent: #6ea8fe;
+      --accent-2: #8a7dff;
+      --danger: #ff6b81;
+      --success: #58d68d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, var(--bg), #050913 70%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      background: rgba(18, 26, 49, 0.8);
+      backdrop-filter: blur(12px);
+    }
+    .content {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1rem; color: var(--muted); }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      background: rgba(88, 214, 141, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(88, 214, 141, 0.25);
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+    input, textarea {
+      width: 100%;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      resize: vertical;
+    }
+    textarea { min-height: 92px; }
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .checkbox input {
+      width: auto;
+      margin: 0;
+    }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 24px rgba(110, 168, 254, 0.18);
+    }
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      box-shadow: none;
+      color: var(--text);
+    }
+    .main {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100vh;
+    }
+    .messages {
+      flex: 1;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .message {
+      margin-bottom: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      white-space: pre-wrap;
+      line-height: 1.55;
+    }
+    .message.user { border-color: rgba(110, 168, 254, 0.35); }
+    .message.assistant { border-color: rgba(138, 125, 255, 0.35); }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+    .composer {
+      border: 1px solid var(--border);
+      background: rgba(18, 26, 49, 0.92);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .footer-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .error {
+      color: var(--danger);
+      font-size: 0.88rem;
+      margin-top: 8px;
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: 0; border-bottom: 1px solid var(--border); }
+      .main { height: auto; min-height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>Assistant local</h1>
+      <h2>Interface web minimale pour vLLM</h2>
+
+      <div class="card">
+        <div class="status" id="status-pill">Initialisation…</div>
+        <div class="footer-note" id="runtime-info">Chargement de la configuration…</div>
+      </div>
+
+      <div class="card">
+        <label for="system-prompt">Prompt système</label>
+        <textarea id="system-prompt" placeholder="Ex: Tu es un assistant de codage concis et précis."></textarea>
+
+        <label for="model-name" style="margin-top: 16px;">Modèle</label>
+        <input id="model-name" placeholder="claude-sonnet-local" />
+
+        <label for="max-tokens" style="margin-top: 16px;">Max tokens</label>
+        <input id="max-tokens" type="number" value="1024" min="1" max="8192" />
+
+        <div class="toolbar">
+          <label class="checkbox"><input id="stream-mode" type="checkbox" checked /> Streaming SSE</label>
+        </div>
+        <div class="footer-note">Le mode streaming consomme l’endpoint <code>/api/v1/chat/stream</code>.</div>
+      </div>
+
+      <div class="card">
+        <strong>Endpoints utiles</strong>
+        <div class="footer-note" style="margin-top: 10px;">UI: <code>/</code></div>
+        <div class="footer-note">REST: <code>/api/v1/chat</code></div>
+        <div class="footer-note">SSE: <code>/api/v1/chat/stream</code></div>
+        <div class="footer-note">Anthropic: <code>/v1/messages</code></div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="main">
+        <div class="messages" id="messages"></div>
+
+        <div class="composer">
+          <label for="prompt">Message</label>
+          <textarea id="prompt" placeholder="Pose ta question ou demande une tâche de code…"></textarea>
+          <div class="toolbar">
+            <button id="send-btn">Envoyer</button>
+            <button class="secondary" id="clear-btn" type="button">Effacer</button>
+          </div>
+          <div class="error" id="error-box"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      history: [],
+      currentAssistantNode: null,
+    };
+
+    const elements = {
+      messages: document.getElementById('messages'),
+      prompt: document.getElementById('prompt'),
+      systemPrompt: document.getElementById('system-prompt'),
+      modelName: document.getElementById('model-name'),
+      maxTokens: document.getElementById('max-tokens'),
+      streamMode: document.getElementById('stream-mode'),
+      sendBtn: document.getElementById('send-btn'),
+      clearBtn: document.getElementById('clear-btn'),
+      errorBox: document.getElementById('error-box'),
+      statusPill: document.getElementById('status-pill'),
+      runtimeInfo: document.getElementById('runtime-info'),
+    };
+
+    function setStatus(text, ok = true) {
+      elements.statusPill.textContent = text;
+      elements.statusPill.style.color = ok ? 'var(--success)' : 'var(--danger)';
+      elements.statusPill.style.background = ok ? 'rgba(88, 214, 141, 0.12)' : 'rgba(255, 107, 129, 0.12)';
+      elements.statusPill.style.borderColor = ok ? 'rgba(88, 214, 141, 0.25)' : 'rgba(255, 107, 129, 0.25)';
+    }
+
+    function showError(message) {
+      elements.errorBox.textContent = message || '';
+    }
+
+    function appendMessage(role, content, meta = '') {
+      const wrapper = document.createElement('article');
+      wrapper.className = `message ${role}`;
+
+      const metaRow = document.createElement('div');
+      metaRow.className = 'meta';
+      metaRow.innerHTML = `<strong>${role === 'user' ? 'Utilisateur' : 'Assistant'}</strong><span>${meta}</span>`;
+
+      const body = document.createElement('div');
+      body.textContent = content;
+
+      wrapper.appendChild(metaRow);
+      wrapper.appendChild(body);
+      elements.messages.appendChild(wrapper);
+      elements.messages.scrollTop = elements.messages.scrollHeight;
+      return body;
+    }
+
+    function clearConversation() {
+      state.history = [];
+      state.currentAssistantNode = null;
+      elements.messages.innerHTML = '';
+      showError('');
+    }
+
+    async function loadConfig() {
+      try {
+        const response = await fetch('/api/v1/config');
+        if (!response.ok) throw new Error('Impossible de charger la configuration');
+        const data = await response.json();
+        elements.modelName.value = data.model;
+        elements.maxTokens.value = data.default_max_tokens;
+        elements.runtimeInfo.textContent = `Upstream: ${data.upstream_base_url} · Modèle: ${data.model}`;
+        setStatus('API prête', true);
+      } catch (error) {
+        setStatus('API indisponible', false);
+        elements.runtimeInfo.textContent = error.message;
+      }
+    }
+
+    function buildPayload() {
+      return {
+        system: elements.systemPrompt.value.trim() || null,
+        model: elements.modelName.value.trim() || null,
+        max_tokens: Number(elements.maxTokens.value || 1024),
+        messages: state.history,
+        prompt: elements.prompt.value.trim(),
+      };
+    }
+
+    function pushUserMessage(prompt) {
+      state.history.push({ role: 'user', content: prompt });
+      appendMessage('user', prompt, new Date().toLocaleTimeString());
+    }
+
+    function startAssistantMessage() {
+      state.currentAssistantNode = appendMessage('assistant', '', 'streaming…');
+    }
+
+    function finalizeAssistantMessage(text) {
+      const finalText = text.trim() || '[Réponse vide]';
+      state.history.push({ role: 'assistant', content: finalText });
+      if (state.currentAssistantNode) {
+        state.currentAssistantNode.textContent = finalText;
+      }
+      state.currentAssistantNode = null;
+    }
+
+    function appendAssistantDelta(delta) {
+      if (!state.currentAssistantNode) startAssistantMessage();
+      state.currentAssistantNode.textContent += delta;
+      elements.messages.scrollTop = elements.messages.scrollHeight;
+    }
+
+    async function sendStandard(payload) {
+      const response = await fetch('/api/v1/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Erreur inconnue' }));
+        throw new Error(error.detail || 'Erreur API');
+      }
+
+      const data = await response.json();
+      appendMessage('assistant', data.message.content, data.model || 'assistant');
+      state.history.push({ role: 'assistant', content: data.message.content });
+    }
+
+    async function sendStreaming(payload) {
+      const response = await fetch('/api/v1/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error('Streaming indisponible');
+      }
+
+      startAssistantMessage();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let assistantText = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const rawEvent of events) {
+          const lines = rawEvent.split('\n');
+          const eventType = lines.find((line) => line.startsWith('event:'))?.slice(6).trim() || 'message';
+          const dataLines = lines
+            .filter((line) => line.startsWith('data:'))
+            .map((line) => line.slice(5).trim())
+            .join('\n');
+
+          if (!dataLines || dataLines === '[DONE]') continue;
+
+          let parsed;
+          try {
+            parsed = JSON.parse(dataLines);
+          } catch {
+            continue;
+          }
+
+          if (eventType === 'content_block_delta' && parsed.delta?.text) {
+            assistantText += parsed.delta.text;
+            appendAssistantDelta(parsed.delta.text);
+          } else if (eventType === 'content_block_start' && parsed.content_block?.text) {
+            assistantText += parsed.content_block.text;
+            appendAssistantDelta(parsed.content_block.text);
+          } else if (eventType === 'error') {
+            throw new Error(parsed.error?.message || 'Erreur SSE');
+          }
+        }
+      }
+
+      finalizeAssistantMessage(assistantText);
+    }
+
+    async function handleSend() {
+      showError('');
+      const prompt = elements.prompt.value.trim();
+      if (!prompt) {
+        showError('Le message ne peut pas être vide.');
+        return;
+      }
+
+      pushUserMessage(prompt);
+      const payload = buildPayload();
+      elements.prompt.value = '';
+      elements.sendBtn.disabled = true;
+
+      try {
+        if (elements.streamMode.checked) {
+          await sendStreaming(payload);
+        } else {
+          await sendStandard(payload);
+        }
+      } catch (error) {
+        if (state.currentAssistantNode) {
+          state.currentAssistantNode.textContent = '[Erreur de streaming]';
+          state.currentAssistantNode = null;
+        }
+        showError(error.message || 'Erreur inattendue.');
+      } finally {
+        elements.sendBtn.disabled = false;
+        elements.prompt.focus();
+      }
+    }
+
+    elements.sendBtn.addEventListener('click', handleSend);
+    elements.clearBtn.addEventListener('click', clearConversation);
+    elements.prompt.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        handleSend();
+      }
+    });
+
+    loadConfig();
+  </script>
+</body>
+</html>

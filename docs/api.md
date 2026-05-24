@@ -11,6 +11,7 @@ Permettre à une application web, un script shell ou un autre service local d'en
 Par défaut, le service est exposé sur :
 
 - `http://localhost:8080`
+- interface web minimale : `http://localhost:8080/`
 - documentation OpenAPI : `http://localhost:8080/docs`
 
 ## Endpoints
@@ -30,6 +31,18 @@ Retourne la configuration runtime utile :
 ### `POST /api/v1/chat`
 
 Permet d'envoyer un prompt unique ou un historique de messages.
+
+### `POST /api/v1/chat/stream`
+
+Retourne un flux SSE relayant les événements Anthropic renvoyés par vLLM.
+
+### `POST /v1/messages`
+
+Endpoint Anthropic-compatible utile pour brancher d'autres clients locaux ou tester la passerelle.
+
+### `POST /v1/messages/count_tokens`
+
+Compte les tokens d'entrée. Si l'upstream n'implémente pas cet endpoint, l'API renvoie un fallback approximatif.
 
 #### Exemple minimal
 
@@ -69,3 +82,14 @@ curl -X POST http://localhost:8080/api/v1/chat \
 - `ASSISTANT_REQUEST_TIMEOUT` : timeout HTTP vers l'upstream
 - `ASSISTANT_SYSTEM_PROMPT` : prompt système global optionnel
 - `ASSISTANT_ANTHROPIC_VERSION` : version d'API Anthropic transmise, défaut `2023-06-01`
+
+## Interface web minimale
+
+Le endpoint racine `/` sert une petite UI HTML/JS sans dépendances externes.
+
+Elle permet de :
+
+- saisir un prompt système
+- chatter en mode standard
+- chatter en mode streaming SSE
+- visualiser la configuration runtime

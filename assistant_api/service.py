@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any
+import json
+from typing import Any, AsyncIterator
 
 import httpx
 
@@ -70,19 +71,53 @@ def build_upstream_headers(settings: Settings) -> dict[str, str]:
     return headers
 
 
+def build_sse_error_event(detail: str) -> bytes:
+    payload = json.dumps({"type": "error", "error": {"message": detail}}, ensure_ascii=False)
+    return f"event: error\ndata: {payload}\n\n".encode("utf-8")
+
+
 def _extract_text(content_blocks: list[dict[str, Any]]) -> str:
     texts = [block.get("text", "") for block in content_blocks if block.get("type") == "text"]
     text = "\n".join(part.strip() for part in texts if part and part.strip())
     return text.strip() or "[Réponse sans contenu texte]"
 
 
+def _collect_text_fragments(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        parts: list[str] = []
+        for item in value:
+            parts.extend(_collect_text_fragments(item))
+        return parts
+    if isinstance(value, dict):
+        if value.get("type") == "text" and isinstance(value.get("text"), str):
+            return [value["text"]]
+        parts: list[str] = []
+        for nested in value.values():
+            parts.extend(_collect_text_fragments(nested))
+        return parts
+    return [str(value)]
+
+
+def approximate_input_tokens(payload: dict[str, Any]) -> int:
+    fragments: list[str] = []
+    fragments.extend(_collect_text_fragments(payload.get("system")))
+    fragments.extend(_collect_text_fragments(payload.get("messages", [])))
+    combined = "\n".join(part for part in fragments if part and part.strip()).strip()
+    if not combined:
+        return 0
+    return max(1, (len(combined) + 3) // 4)
+
+
 class AssistantGateway:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
-    async def chat(self, request: ChatRequest) -> ChatResponse:
-        payload = build_upstream_payload(request, self.settings)
-        url = f"{self.settings.upstream_base_url}/v1/messages"
+    async def _post_json(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        url = f"{self.settings.upstream_base_url}{path}"
         headers = build_upstream_headers(self.settings)
 
         try:
@@ -100,7 +135,11 @@ class AssistantGateway:
                 pass
             raise UpstreamAPIError(response.status_code, detail)
 
-        data = response.json()
+        return response.json()
+
+    async def chat(self, request: ChatRequest) -> ChatResponse:
+        payload = build_upstream_payload(request, self.settings)
+        data = await self._post_json("/v1/messages", payload)
         content_blocks = data.get("content", [])
 
         return ChatResponse(
@@ -111,3 +150,37 @@ class AssistantGateway:
             stop_reason=data.get("stop_reason"),
             usage=data.get("usage"),
         )
+
+    async def anthropic_messages(self, payload: dict[str, Any]) -> dict[str, Any]:
+        sanitized_payload = dict(payload)
+        sanitized_payload.pop("stream", None)
+        return await self._post_json("/v1/messages", sanitized_payload)
+
+    async def count_tokens(self, payload: dict[str, Any]) -> dict[str, Any]:
+        sanitized_payload = dict(payload)
+        sanitized_payload.pop("stream", None)
+        try:
+            return await self._post_json("/v1/messages/count_tokens", sanitized_payload)
+        except UpstreamAPIError as exc:
+            if exc.status_code not in {404, 405, 501}:
+                raise
+            return {"input_tokens": approximate_input_tokens(sanitized_payload)}
+
+    async def stream_anthropic_messages(self, payload: dict[str, Any]) -> AsyncIterator[bytes]:
+        url = f"{self.settings.upstream_base_url}/v1/messages"
+        headers = build_upstream_headers(self.settings)
+        streaming_payload = dict(payload)
+        streaming_payload["stream"] = True
+
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.request_timeout) as client:
+                async with client.stream("POST", url, headers=headers, json=streaming_payload) as response:
+                    if response.is_error:
+                        detail = await response.aread()
+                        yield build_sse_error_event(detail.decode("utf-8", errors="replace"))
+                        return
+                    async for chunk in response.aiter_raw():
+                        if chunk:
+                            yield chunk
+        except httpx.RequestError as exc:
+            yield build_sse_error_event(f"Impossible de joindre l'upstream Anthropic-compatible: {exc}")

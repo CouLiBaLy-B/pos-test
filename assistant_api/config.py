@@ -15,7 +15,7 @@ def _normalize_base_url(url: str) -> str:
 @dataclass(frozen=True)
 class Settings:
     app_name: str = "assistant-api"
-    app_version: str = "0.2.0"
+    app_version: str = "0.3.0"
     upstream_base_url: str = "http://localhost:8000"
     auth_token: str = "dummy"
     api_key: str = "dummy"

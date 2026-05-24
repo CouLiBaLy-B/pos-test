@@ -59,7 +59,8 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │   ├── config.py
 │   ├── main.py
 │   ├── models.py
-│   └── service.py
+│   ├── service.py
+│   └── static/index.html
 ├── Dockerfile.api
 ├── Makefile
 ├── docker-compose.yml
@@ -72,6 +73,7 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │   ├── api.md
 │   ├── architecture.md
 │   ├── audit-vllm-claude.md
+│   ├── merge-ready.md
 │   ├── models.md
 │   ├── roadmap-v0.2.0.md
 │   └── security.md
@@ -131,10 +133,11 @@ make setup-claude
 
 ### 6. Utiliser l'API de l'assistant
 
-Une fois la stack lancée, l'API est disponible sur :
+Une fois la stack lancée :
 
 ```bash
-http://localhost:8080/docs
+http://localhost:8080/      # Interface web minimale
+http://localhost:8080/docs  # OpenAPI / Swagger
 ```
 
 Exemple rapide :
@@ -144,6 +147,28 @@ curl -X POST http://localhost:8080/api/v1/chat \
   -H 'Content-Type: application/json' \
   -d '{
     "prompt": "Explique-moi comment démarrer ce projet"
+  }'
+```
+
+Streaming SSE :
+
+```bash
+curl -N -X POST http://localhost:8080/api/v1/chat/stream \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "prompt": "Explique-moi la structure"
+  }'
+```
+
+Passerelle Anthropic-compatible :
+
+```bash
+curl -X POST http://localhost:8080/v1/messages \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "claude-sonnet-local",
+    "max_tokens": 512,
+    "messages": [{"role": "user", "content": "Dis bonjour"}]
   }'
 ```
 
@@ -176,6 +201,9 @@ make sync-labels    # crée ou met à jour les labels GitHub du repo
 ```
 
 ## Audit et cohérence de la branche
+
+Cette branche est aussi préparée pour être **merge-ready** vers `develop`. Le plan de merge est documenté dans `docs/merge-ready.md`.
+
 
 Le rapport d'audit est disponible dans `docs/audit-vllm-claude.md`.
 
@@ -247,6 +275,14 @@ La feuille de route initiale est documentée dans `docs/roadmap-v0.2.0.md`.
 ## API
 
 La documentation détaillée de l'API est disponible dans `docs/api.md`.
+
+L'API expose maintenant :
+
+- `/api/v1/chat`
+- `/api/v1/chat/stream`
+- `/v1/messages`
+- `/v1/messages/count_tokens`
+- `/` pour une interface web minimale
 
 ## Notes importantes
 

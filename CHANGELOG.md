@@ -12,6 +12,10 @@
 - service Docker `assistant-api` exposé sur le port `8080`
 - branche variante `sans-litellm` avec intégration directe Claude Code -> vLLM
 - rapport d'audit technique vLLM + Claude Code
+- endpoint SSE `/api/v1/chat/stream`
+- endpoints Anthropic-compatibles `/v1/messages` et `/v1/messages/count_tokens`
+- interface web minimale servie par l'API locale
+- plan de merge `merge-ready` vers `develop`
 
 ### Changed
 
