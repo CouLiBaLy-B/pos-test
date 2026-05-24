@@ -79,6 +79,7 @@ def test_claude_settings_json_is_valid() -> None:
     assert data["env"]["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"] == "1"
     assert {"filesystem", "playwright"}.issubset(data["mcpServers"].keys())
     assert any(item.startswith("Bash(git:") for item in data["permissions"]["allow"])
+    assert any("sandbox-run.sh" in item for item in data["permissions"]["allow"])
 
 
 def test_docker_compose_has_required_services() -> None:
@@ -100,6 +101,10 @@ def test_docker_compose_has_required_services() -> None:
     assert services["assistant-api"]["environment"]["ASSISTANT_UPSTREAM_BASE_URL"] == "http://vllm:8000"
     assert services["assistant-sandbox"]["profiles"] == ["sandbox"]
     assert services["assistant-sandbox"]["working_dir"] == "/workspace"
+    assert services["assistant-sandbox"]["user"] == "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    assert services["assistant-sandbox"]["security_opt"] == ["no-new-privileges:true"]
+    assert services["assistant-sandbox"]["cap_drop"] == ["ALL"]
+    assert services["assistant-sandbox"]["tmpfs"] == ["/tmp"]
 
 
 def test_skills_have_front_matter_and_description() -> None:
@@ -132,6 +137,7 @@ def test_readme_mentions_test_and_setup_commands() -> None:
     assert "sans LiteLLM" in readme
     assert "make sandbox-shell" in readme
     assert "make sandbox-test" in readme
+    assert "UID/GID" in readme
 
 
 def test_github_community_files_are_present_and_valid() -> None:
@@ -202,3 +208,5 @@ def test_sandbox_doc_mentions_profiles_and_workspace() -> None:
     assert "assistant-sandbox" in sandbox_doc
     assert "profil Compose `sandbox`" in sandbox_doc or "profil compose `sandbox`" in sandbox_doc.lower()
     assert "/workspace" in sandbox_doc
+    assert "UID/GID" in sandbox_doc
+    assert "no-new-privileges" in sandbox_doc

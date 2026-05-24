@@ -302,6 +302,12 @@ La documentation détaillée de la sandbox est disponible dans `docs/sandbox.md`
 
 Cette sandbox sert à exécuter des commandes dans un conteneur dédié monté sur `/workspace` sans faire tourner toute la boucle agentique directement sur l'hôte.
 
+Points importants sur les permissions :
+
+- la sandbox tourne avec le **même UID/GID que l'utilisateur hôte**
+- elle évite ainsi de créer des fichiers appartenant à `root` dans le dépôt
+- elle applique aussi `no-new-privileges` et `cap_drop: [ALL]`
+
 ## Notes importantes
 
 - Ce repo **ne stocke aucun secret**.

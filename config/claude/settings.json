@@ -34,7 +34,12 @@
       "Bash(yarn:*)",
       "Bash(pytest:*)",
       "Bash(python:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(./scripts/sandbox-up.sh:*)",
+      "Bash(./scripts/sandbox-down.sh:*)",
+      "Bash(./scripts/sandbox-shell.sh:*)",
+      "Bash(./scripts/sandbox-run.sh:*)",
+      "Bash(./scripts/sandbox-test.sh:*)"
     ],
     "deny": [
       "Bash(rm -rf /:*)"
