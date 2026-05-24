@@ -13,12 +13,19 @@ EXPECTED_FILES = [
     ROOT / "README.md",
     ROOT / ".env.example",
     ROOT / ".gitignore",
+    ROOT / "Dockerfile.api",
     ROOT / "Makefile",
     ROOT / "docker-compose.yml",
+    ROOT / "requirements.txt",
     ROOT / "requirements-dev.txt",
     ROOT / "CHANGELOG.md",
+    ROOT / "assistant_api" / "config.py",
+    ROOT / "assistant_api" / "main.py",
+    ROOT / "assistant_api" / "models.py",
+    ROOT / "assistant_api" / "service.py",
     ROOT / "config" / "claude" / "settings.json",
     ROOT / "config" / "litellm" / "config.yaml",
+    ROOT / "docs" / "api.md",
     ROOT / "docs" / "architecture.md",
     ROOT / "docs" / "models.md",
     ROOT / "docs" / "roadmap-v0.2.0.md",
@@ -45,6 +52,7 @@ EXPECTED_FILES = [
     ROOT / ".github" / "workflows" / "ci.yml",
     ROOT / ".github" / "workflows" / "pr-labeler.yml",
     ROOT / ".github" / "workflows" / "release.yml",
+    ROOT / "tests" / "test_assistant_api.py",
 ]
 
 
@@ -81,7 +89,7 @@ def test_docker_compose_has_required_services() -> None:
 
     assert "services" in data
     services = data["services"]
-    assert {"vllm", "litellm"}.issubset(services.keys())
+    assert {"vllm", "litellm", "assistant-api"}.issubset(services.keys())
 
     vllm_command = services["vllm"]["command"]
     assert "--enable-auto-tool-choice" in vllm_command
@@ -89,6 +97,7 @@ def test_docker_compose_has_required_services() -> None:
     assert "--enable-prefix-caching" in vllm_command
 
     assert services["litellm"]["depends_on"]["vllm"]["condition"] == "service_healthy"
+    assert services["assistant-api"]["depends_on"]["litellm"]["condition"] == "service_healthy"
 
 
 def test_skills_have_front_matter_and_description() -> None:
@@ -114,6 +123,8 @@ def test_readme_mentions_test_and_setup_commands() -> None:
     assert "make health" in readme
     assert "make setup-claude" in readme
     assert "make test" in readme
+    assert "http://localhost:8080/docs" in readme
+    assert "/api/v1/chat" in readme
 
 
 def test_github_community_files_are_present_and_valid() -> None:
