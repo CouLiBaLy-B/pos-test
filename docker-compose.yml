@@ -60,3 +60,27 @@ services:
       timeout: 10s
       retries: 20
       start_period: 30s
+
+  assistant-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: assistant-api
+    depends_on:
+      litellm:
+        condition: service_healthy
+    ports:
+      - "${ASSISTANT_API_PORT:-8080}:8080"
+    environment:
+      ASSISTANT_UPSTREAM_BASE_URL: http://litellm:4000
+      ASSISTANT_AUTH_TOKEN: ${ASSISTANT_AUTH_TOKEN:-sk-local-dummy}
+      ASSISTANT_MODEL: ${ASSISTANT_MODEL:-claude-3-5-sonnet-20241022}
+      ASSISTANT_DEFAULT_MAX_TOKENS: ${ASSISTANT_DEFAULT_MAX_TOKENS:-2048}
+      ASSISTANT_REQUEST_TIMEOUT: ${ASSISTANT_REQUEST_TIMEOUT:-120}
+      ASSISTANT_SYSTEM_PROMPT: ${ASSISTANT_SYSTEM_PROMPT:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz')"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 15s

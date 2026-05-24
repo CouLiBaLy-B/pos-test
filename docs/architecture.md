@@ -5,10 +5,13 @@
 Cette stack part du principe que l'interface agentique reste **Claude Code**, mais que l'inférence est **locale**.
 
 ```text
-Claude Code
+Claude Code / Client HTTP
    │
-   ├─ Skills (instructions locales)
+   ├─ Skills (instructions locales, côté Claude Code)
    ├─ MCP (capacités externes, à limiter)
+   │
+   ▼
+Assistant API (FastAPI)
    │
    ▼
 LiteLLM Proxy
@@ -71,3 +74,13 @@ Le repo inclut 4 skills de base :
 - Le comportement exact varie selon la version de Claude Code, LiteLLM et vLLM.
 - Les modèles locaux restent plus fragiles que des modèles frontière pour les tâches très longues.
 - Plus le nombre de MCP actifs augmente, plus le contexte grossit et moins l'expérience est fluide.
+
+## API HTTP
+
+Le dépôt inclut désormais une API FastAPI exposée sur le port `8080`.
+
+Cette couche sert à :
+
+- fournir un point d'entrée REST simple pour une UI ou un script
+- centraliser le modèle, le prompt système et les timeouts
+- garder la compatibilité avec un upstream Anthropic-compatible via LiteLLM

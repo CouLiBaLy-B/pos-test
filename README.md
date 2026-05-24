@@ -16,10 +16,10 @@ Stack locale pour exécuter un assistant de codage **privé** sur une machine NV
 ## Architecture
 
 ```text
-Claude Code / IDE
+Claude Code / Client HTTP
         │
         ▼
-Anthropic Messages API
+Assistant API (:8080)
         │
         ▼
 LiteLLM Proxy (:4000)
@@ -58,14 +58,22 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │       ├── ci.yml
 │       ├── pr-labeler.yml
 │       └── release.yml
+├── assistant_api/
+│   ├── config.py
+│   ├── main.py
+│   ├── models.py
+│   └── service.py
+├── Dockerfile.api
 ├── Makefile
 ├── docker-compose.yml
+├── requirements.txt
 ├── requirements-dev.txt
 ├── CHANGELOG.md
 ├── config/
 │   ├── claude/settings.json
 │   └── litellm/config.yaml
 ├── docs/
+│   ├── api.md
 │   ├── architecture.md
 │   ├── models.md
 │   ├── roadmap-v0.2.0.md
@@ -80,6 +88,7 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │   ├── start.sh
 │   └── stop.sh
 ├── tests/
+│   ├── test_assistant_api.py
 │   └── test_repository.py
 └── skills/
     ├── debug-loop/SKILL.md
@@ -125,7 +134,25 @@ make health
 make setup-claude
 ```
 
-### 6. Utiliser Claude Code
+### 6. Utiliser l'API de l'assistant
+
+Une fois la stack lancée, l'API est disponible sur :
+
+```bash
+http://localhost:8080/docs
+```
+
+Exemple rapide :
+
+```bash
+curl -X POST http://localhost:8080/api/v1/chat \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "prompt": "Explique-moi comment démarrer ce projet"
+  }'
+```
+
+### 7. Utiliser Claude Code
 
 ```bash
 export ANTHROPIC_BASE_URL=http://localhost:4000
@@ -137,7 +164,7 @@ claude
 ## Commandes utiles
 
 ```bash
-make up            # démarre vLLM + LiteLLM
+make up            # démarre vLLM + LiteLLM + Assistant API
 make down          # arrête la stack
 make restart       # redémarre
 make logs          # affiche les logs
@@ -221,6 +248,10 @@ La CD publie une archive du projet lors d'un tag `v*` ou via déclenchement manu
 ## Roadmap
 
 La feuille de route initiale est documentée dans `docs/roadmap-v0.2.0.md`.
+
+## API
+
+La documentation détaillée de l'API est disponible dans `docs/api.md`.
 
 ## Notes importantes
 

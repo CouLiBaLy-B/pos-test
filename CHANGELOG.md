@@ -8,6 +8,8 @@
 - labeler GitHub automatique pour les pull requests
 - synchronisation scriptée des labels GitHub
 - roadmap `v0.2.0`
+- API FastAPI pour interagir avec l'assistant local
+- service Docker `assistant-api` exposé sur le port `8080`
 
 ## v0.1.0 - 2026-05-24
 
