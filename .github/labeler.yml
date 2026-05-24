@@ -1,0 +1,44 @@
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'README.md'
+          - 'CHANGELOG.md'
+          - 'docs/**'
+
+ci-cd:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - 'docker-compose.yml'
+          - 'Makefile'
+          - 'scripts/**'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'tests/**'
+          - 'requirements-dev.txt'
+
+claude-code:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'config/claude/**'
+          - 'skills/**'
+
+mcp:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'config/litellm/**'
+          - 'config/claude/**'
+          - 'docs/models.md'
+
+automation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'scripts/**'
+          - '.github/**'
+
+roadmap:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/roadmap-v0.2.0.md'

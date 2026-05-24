@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- branche `develop` pour préparer les changements avant revue vers `main`
+- labeler GitHub automatique pour les pull requests
+- synchronisation scriptée des labels GitHub
+- roadmap `v0.2.0`
+
 ## v0.1.0 - 2026-05-24
 
 Première version publique du projet.

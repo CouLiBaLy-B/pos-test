@@ -52,8 +52,11 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │   │   ├── bug_report.yml
 │   │   ├── config.yml
 │   │   └── feature_request.yml
+│   ├── labeler.yml
+│   ├── labels.json
 │   └── workflows/
 │       ├── ci.yml
+│       ├── pr-labeler.yml
 │       └── release.yml
 ├── Makefile
 ├── docker-compose.yml
@@ -65,12 +68,14 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 ├── docs/
 │   ├── architecture.md
 │   ├── models.md
+│   ├── roadmap-v0.2.0.md
 │   └── security.md
 ├── scripts/
 │   ├── bootstrap.sh
 │   ├── healthcheck.sh
 │   ├── run-tests.sh
 │   ├── apply-branch-protection.sh
+│   ├── sync-labels.sh
 │   ├── setup-claude.sh
 │   ├── start.sh
 │   └── stop.sh
@@ -139,16 +144,41 @@ make logs          # affiche les logs
 make health        # vérifie les endpoints
 make setup-claude  # installe settings + skills dans ~/.claude
 make test          # lance les tests et validations locales
-make protect-branch # applique la protection GitHub sur main
+make protect-branch # applique la protection GitHub sur la branche ciblée
+make sync-labels   # crée ou met à jour les labels GitHub du repo
 ```
 
 ## Gouvernance GitHub
+
+Cette base de dépôt inclut la protection de branches, les fichiers communautaires GitHub et un étiquetage automatique des PR.
+
+### Workflow de branches
+
+Le dépôt suit maintenant un flux simple :
+
+- `main` : branche protégée, stable, orientée release
+- `develop` : branche d'intégration protégée
+- branches de travail : `feat/...`, `fix/...`, `chore/...` ouvertes en PR vers `develop`
+
+Exemples :
+
+```bash
+# protéger develop
+GITHUB_BRANCH=develop GITHUB_TOKEN=ghp_xxx make protect-branch
+
+# synchroniser les labels du dépôt
+GITHUB_TOKEN=ghp_xxx make sync-labels
+```
+
+### Fichiers et automatisations GitHub
 
 Le dépôt inclut maintenant :
 
 - `CODEOWNERS` pour imposer un propriétaire par défaut
 - des templates d'issues Bug / Feature
-- un template de pull request
+- un template de pull request plus détaillé
+- un labeler automatique pour les pull requests
+- un catalogue de labels versionné dans `.github/labels.json`
 - un script `scripts/apply-branch-protection.sh` pour rejouer la configuration de protection de branche
 
 Exemple :
@@ -187,6 +217,10 @@ La CI GitHub exécute :
 - la suite `pytest`
 
 La CD publie une archive du projet lors d'un tag `v*` ou via déclenchement manuel.
+
+## Roadmap
+
+La feuille de route initiale est documentée dans `docs/roadmap-v0.2.0.md`.
 
 ## Notes importantes
 

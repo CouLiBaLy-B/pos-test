@@ -3,7 +3,7 @@ SHELL := /bin/bash
 -include .env
 export $(shell sed 's/=.*//' .env 2>/dev/null)
 
-.PHONY: up down restart logs health setup-claude bootstrap test lint protect-branch
+.PHONY: up down restart logs health setup-claude bootstrap test lint protect-branch sync-labels
 
 up:
 	./scripts/start.sh
@@ -35,3 +35,6 @@ lint:
 
 protect-branch:
 	./scripts/apply-branch-protection.sh
+
+sync-labels:
+	./scripts/sync-labels.sh

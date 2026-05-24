@@ -21,11 +21,13 @@ EXPECTED_FILES = [
     ROOT / "config" / "litellm" / "config.yaml",
     ROOT / "docs" / "architecture.md",
     ROOT / "docs" / "models.md",
+    ROOT / "docs" / "roadmap-v0.2.0.md",
     ROOT / "docs" / "security.md",
     ROOT / "scripts" / "bootstrap.sh",
     ROOT / "scripts" / "healthcheck.sh",
     ROOT / "scripts" / "apply-branch-protection.sh",
     ROOT / "scripts" / "run-tests.sh",
+    ROOT / "scripts" / "sync-labels.sh",
     ROOT / "scripts" / "setup-claude.sh",
     ROOT / "scripts" / "start.sh",
     ROOT / "scripts" / "stop.sh",
@@ -38,7 +40,10 @@ EXPECTED_FILES = [
     ROOT / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml",
     ROOT / ".github" / "ISSUE_TEMPLATE" / "config.yml",
     ROOT / ".github" / "ISSUE_TEMPLATE" / "feature_request.yml",
+    ROOT / ".github" / "labeler.yml",
+    ROOT / ".github" / "labels.json",
     ROOT / ".github" / "workflows" / "ci.yml",
+    ROOT / ".github" / "workflows" / "pr-labeler.yml",
     ROOT / ".github" / "workflows" / "release.yml",
 ]
 
@@ -133,4 +138,26 @@ def test_readme_mentions_badges_and_branch_protection() -> None:
     assert "actions/workflows/ci.yml/badge.svg" in readme
     assert "actions/workflows/release.yml/badge.svg" in readme
     assert "make protect-branch" in readme
+    assert "make sync-labels" in readme
+    assert "develop" in readme
     assert "code owner review" in readme.lower()
+
+
+def test_labeler_and_labels_config_are_valid() -> None:
+    labeler = yaml.safe_load((ROOT / ".github" / "labeler.yml").read_text())
+    labels = json.loads((ROOT / ".github" / "labels.json").read_text())
+
+    label_names = {item["name"] for item in labels}
+    assert "documentation" in label_names
+    assert "ci-cd" in label_names
+    assert "roadmap" in label_names
+    assert "documentation" in labeler
+    assert "automation" in labeler
+
+
+def test_roadmap_mentions_develop_and_v020() -> None:
+    roadmap = (ROOT / "docs" / "roadmap-v0.2.0.md").read_text()
+
+    assert "Roadmap v0.2.0" in roadmap
+    assert "develop" in roadmap
+    assert "main" in roadmap
