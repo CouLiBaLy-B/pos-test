@@ -66,3 +66,26 @@ services:
       timeout: 10s
       retries: 20
       start_period: 15s
+
+
+  assistant-sandbox:
+    profiles: ["sandbox"]
+    build:
+      context: .
+      dockerfile: Dockerfile.sandbox
+    container_name: assistant-sandbox
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./:/workspace
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-http://vllm:8000}
+      ANTHROPIC_AUTH_TOKEN: ${ANTHROPIC_AUTH_TOKEN:-dummy}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-dummy}
+      ANTHROPIC_DEFAULT_SONNET_MODEL: ${ANTHROPIC_DEFAULT_SONNET_MODEL:-claude-sonnet-local}
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: ${ANTHROPIC_DEFAULT_HAIKU_MODEL:-claude-sonnet-local}
+      ANTHROPIC_DEFAULT_OPUS_MODEL: ${ANTHROPIC_DEFAULT_OPUS_MODEL:-claude-sonnet-local}
+    command: ["bash", "-lc", "sleep infinity"]

@@ -61,6 +61,7 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │   ├── models.py
 │   ├── service.py
 │   └── static/index.html
+├── Dockerfile.sandbox
 ├── Dockerfile.api
 ├── Makefile
 ├── docker-compose.yml
@@ -75,12 +76,18 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │   ├── audit-vllm-claude.md
 │   ├── merge-ready.md
 │   ├── models.md
+│   ├── sandbox.md
 │   ├── roadmap-v0.2.0.md
 │   └── security.md
 ├── scripts/
 │   ├── bootstrap.sh
 │   ├── healthcheck.sh
 │   ├── run-tests.sh
+│   ├── sandbox-down.sh
+│   ├── sandbox-run.sh
+│   ├── sandbox-shell.sh
+│   ├── sandbox-test.sh
+│   ├── sandbox-up.sh
 │   ├── apply-branch-protection.sh
 │   ├── sync-labels.sh
 │   ├── setup-claude.sh
@@ -198,6 +205,11 @@ make setup-claude   # installe settings + skills dans ~/.claude
 make test           # lance les tests et validations locales
 make protect-branch # applique la protection GitHub sur la branche ciblée
 make sync-labels    # crée ou met à jour les labels GitHub du repo
+make sandbox-up     # démarre la sandbox Docker simple
+make sandbox-shell  # ouvre un shell dans la sandbox
+make sandbox-run    # exécute une commande dans la sandbox
+make sandbox-test   # exécute la validation dans la sandbox
+make sandbox-down   # arrête la sandbox
 ```
 
 ## Audit et cohérence de la branche
@@ -283,6 +295,12 @@ L'API expose maintenant :
 - `/v1/messages`
 - `/v1/messages/count_tokens`
 - `/` pour une interface web minimale
+
+## Sandbox Docker simple
+
+La documentation détaillée de la sandbox est disponible dans `docs/sandbox.md`.
+
+Cette sandbox sert à exécuter des commandes dans un conteneur dédié monté sur `/workspace` sans faire tourner toute la boucle agentique directement sur l'hôte.
 
 ## Notes importantes
 

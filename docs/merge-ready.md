@@ -14,6 +14,7 @@ Préparer un merge propre vers `develop` avec un périmètre clair, des tests ve
   - compatibilité Anthropic `/v1/messages`
   - endpoint `/v1/messages/count_tokens`
   - interface web minimale `/`
+- sandbox Docker simple `assistant-sandbox` pour l'exécution isolée de commandes
 
 ## Checklist avant merge
 

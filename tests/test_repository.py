@@ -14,6 +14,7 @@ EXPECTED_FILES = [
     ROOT / ".env.example",
     ROOT / ".gitignore",
     ROOT / "Dockerfile.api",
+    ROOT / "Dockerfile.sandbox",
     ROOT / "Makefile",
     ROOT / "docker-compose.yml",
     ROOT / "requirements.txt",
@@ -30,10 +31,16 @@ EXPECTED_FILES = [
     ROOT / "docs" / "merge-ready.md",
     ROOT / "docs" / "audit-vllm-claude.md",
     ROOT / "docs" / "models.md",
+    ROOT / "docs" / "sandbox.md",
     ROOT / "docs" / "roadmap-v0.2.0.md",
     ROOT / "docs" / "security.md",
     ROOT / "scripts" / "bootstrap.sh",
     ROOT / "scripts" / "healthcheck.sh",
+    ROOT / "scripts" / "sandbox-down.sh",
+    ROOT / "scripts" / "sandbox-run.sh",
+    ROOT / "scripts" / "sandbox-shell.sh",
+    ROOT / "scripts" / "sandbox-test.sh",
+    ROOT / "scripts" / "sandbox-up.sh",
     ROOT / "scripts" / "apply-branch-protection.sh",
     ROOT / "scripts" / "run-tests.sh",
     ROOT / "scripts" / "sync-labels.sh",
@@ -79,7 +86,7 @@ def test_docker_compose_has_required_services() -> None:
 
     assert "services" in data
     services = data["services"]
-    assert {"vllm", "assistant-api"}.issubset(services.keys())
+    assert {"vllm", "assistant-api", "assistant-sandbox"}.issubset(services.keys())
     assert "litellm" not in services
 
     vllm_command = services["vllm"]["command"]
@@ -91,6 +98,8 @@ def test_docker_compose_has_required_services() -> None:
 
     assert services["assistant-api"]["depends_on"]["vllm"]["condition"] == "service_healthy"
     assert services["assistant-api"]["environment"]["ASSISTANT_UPSTREAM_BASE_URL"] == "http://vllm:8000"
+    assert services["assistant-sandbox"]["profiles"] == ["sandbox"]
+    assert services["assistant-sandbox"]["working_dir"] == "/workspace"
 
 
 def test_skills_have_front_matter_and_description() -> None:
@@ -121,6 +130,8 @@ def test_readme_mentions_test_and_setup_commands() -> None:
     assert "/api/v1/chat/stream" in readme
     assert "/v1/messages" in readme
     assert "sans LiteLLM" in readme
+    assert "make sandbox-shell" in readme
+    assert "make sandbox-test" in readme
 
 
 def test_github_community_files_are_present_and_valid() -> None:
@@ -183,3 +194,11 @@ def test_merge_ready_doc_mentions_pr_and_checks() -> None:
     assert "Checklist" in merge_doc
     assert "develop" in merge_doc
     assert "PR" in merge_doc
+
+
+def test_sandbox_doc_mentions_profiles_and_workspace() -> None:
+    sandbox_doc = (ROOT / "docs" / "sandbox.md").read_text()
+
+    assert "assistant-sandbox" in sandbox_doc
+    assert "profil Compose `sandbox`" in sandbox_doc or "profil compose `sandbox`" in sandbox_doc.lower()
+    assert "/workspace" in sandbox_doc
