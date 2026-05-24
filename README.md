@@ -88,6 +88,7 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
 │   ├── sandbox-shell.sh
 │   ├── sandbox-test.sh
 │   ├── sandbox-up.sh
+│   ├── claude-sandbox.sh
 │   ├── apply-branch-protection.sh
 │   ├── sync-labels.sh
 │   ├── setup-claude.sh
@@ -100,6 +101,7 @@ Qwen3-Coder-30B-A3B-Instruct-AWQ
     ├── debug-loop/SKILL.md
     ├── feature-dev/SKILL.md
     ├── git-workflow/SKILL.md
+    ├── sandbox-first/SKILL.md
     └── write-tests/SKILL.md
 ```
 
@@ -210,6 +212,7 @@ make sandbox-shell  # ouvre un shell dans la sandbox
 make sandbox-run    # exécute une commande dans la sandbox
 make sandbox-test   # exécute la validation dans la sandbox
 make sandbox-down   # arrête la sandbox
+make claude-sandbox # lance Claude Code en mode sandbox-first
 ```
 
 ## Audit et cohérence de la branche
@@ -307,6 +310,20 @@ Points importants sur les permissions :
 - la sandbox tourne avec le **même UID/GID que l'utilisateur hôte**
 - elle évite ainsi de créer des fichiers appartenant à `root` dans le dépôt
 - elle applique aussi `no-new-privileges` et `cap_drop: [ALL]`
+
+## Claude Code branché par défaut sur la sandbox
+
+Le dépôt est maintenant configuré en mode **sandbox-first** :
+
+- la skill `sandbox-first` demande d'utiliser les wrappers `sandbox-*` pour toute commande de dev
+- la config Claude autorise les wrappers sandbox et refuse les commandes host directes comme `python`, `pytest`, `npm`, `make` et `git`
+- tu peux lancer Claude Code avec :
+
+```bash
+make claude-sandbox
+```
+
+Cela démarre la sandbox puis lance `claude` avec la politique d'exécution prévue par le projet.
 
 ## Notes importantes
 

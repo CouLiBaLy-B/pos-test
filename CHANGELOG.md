@@ -17,6 +17,7 @@
 - interface web minimale servie par l'API locale
 - plan de merge `merge-ready` vers `develop`
 - sandbox Docker simple `assistant-sandbox` pour l'exécution de commandes isolées
+- mode `sandbox-first` pour Claude Code avec wrappers Bash autorisés
 
 ### Changed
 

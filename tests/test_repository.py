@@ -41,6 +41,7 @@ EXPECTED_FILES = [
     ROOT / "scripts" / "sandbox-shell.sh",
     ROOT / "scripts" / "sandbox-test.sh",
     ROOT / "scripts" / "sandbox-up.sh",
+    ROOT / "scripts" / "claude-sandbox.sh",
     ROOT / "scripts" / "apply-branch-protection.sh",
     ROOT / "scripts" / "run-tests.sh",
     ROOT / "scripts" / "sync-labels.sh",
@@ -50,6 +51,7 @@ EXPECTED_FILES = [
     ROOT / "skills" / "debug-loop" / "SKILL.md",
     ROOT / "skills" / "feature-dev" / "SKILL.md",
     ROOT / "skills" / "git-workflow" / "SKILL.md",
+    ROOT / "skills" / "sandbox-first" / "SKILL.md",
     ROOT / "skills" / "write-tests" / "SKILL.md",
     ROOT / ".github" / "CODEOWNERS",
     ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md",
@@ -78,8 +80,10 @@ def test_claude_settings_json_is_valid() -> None:
     assert data["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"] == "claude-sonnet-local"
     assert data["env"]["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"] == "1"
     assert {"filesystem", "playwright"}.issubset(data["mcpServers"].keys())
-    assert any(item.startswith("Bash(git:") for item in data["permissions"]["allow"])
     assert any("sandbox-run.sh" in item for item in data["permissions"]["allow"])
+    assert any("claude-sandbox.sh" in item for item in data["permissions"]["allow"])
+    assert any("Bash(git:*)" == item for item in data["permissions"]["deny"])
+    assert any("Bash(python3:*)" == item for item in data["permissions"]["deny"])
 
 
 def test_docker_compose_has_required_services() -> None:
@@ -137,6 +141,7 @@ def test_readme_mentions_test_and_setup_commands() -> None:
     assert "sans LiteLLM" in readme
     assert "make sandbox-shell" in readme
     assert "make sandbox-test" in readme
+    assert "make claude-sandbox" in readme
     assert "UID/GID" in readme
 
 
@@ -210,3 +215,11 @@ def test_sandbox_doc_mentions_profiles_and_workspace() -> None:
     assert "/workspace" in sandbox_doc
     assert "UID/GID" in sandbox_doc
     assert "no-new-privileges" in sandbox_doc
+
+
+def test_sandbox_first_skill_mentions_wrappers() -> None:
+    skill = (ROOT / "skills" / "sandbox-first" / "SKILL.md").read_text()
+
+    assert "sandbox-run.sh" in skill
+    assert "sandbox-test.sh" in skill
+    assert "git" in skill.lower()

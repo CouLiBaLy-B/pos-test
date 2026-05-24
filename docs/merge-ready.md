@@ -15,6 +15,7 @@ Préparer un merge propre vers `develop` avec un périmètre clair, des tests ve
   - endpoint `/v1/messages/count_tokens`
   - interface web minimale `/`
 - sandbox Docker simple `assistant-sandbox` pour l'exécution isolée de commandes
+- politique Claude Code `sandbox-first` via wrappers `sandbox-*`
 
 ## Checklist avant merge
 

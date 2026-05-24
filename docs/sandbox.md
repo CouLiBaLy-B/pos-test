@@ -75,3 +75,27 @@ make sandbox-run CMD="python3 -m pip install -r requirements-dev.txt"
 make sandbox-run CMD="pytest -q"
 make sandbox-shell
 ```
+
+## Claude Code en mode sandbox-first
+
+Le projet peut lancer Claude Code avec :
+
+```bash
+make claude-sandbox
+```
+
+Ce wrapper :
+
+- démarre la sandbox si nécessaire
+- lance `claude`
+- s'appuie sur `config/claude/settings.json` pour n'autoriser côté Bash que les wrappers `sandbox-*`
+
+En pratique, cela signifie que Claude Code doit utiliser par défaut :
+
+- `./scripts/sandbox-up.sh`
+- `./scripts/sandbox-run.sh`
+- `./scripts/sandbox-test.sh`
+- `./scripts/sandbox-shell.sh`
+- `./scripts/sandbox-down.sh`
+
+et non des commandes host directes comme `python`, `pytest`, `npm`, `node`, `make` ou `git`.
