@@ -1,11 +1,33 @@
 ## Résumé
 
 - décrivez brièvement le changement
-- expliquez le contexte si utile
+- précisez le problème résolu
+- référencez l'issue ou la discussion si disponible
+
+## Type de changement
+
+- [ ] feat
+- [ ] fix
+- [ ] docs
+- [ ] refactor
+- [ ] test
+- [ ] chore
+
+## Validation
+
+- [ ] `make test` exécuté localement
+- [ ] tests complémentaires ajoutés ou mis à jour si nécessaire
+- [ ] impact configuration vérifié
+
+## Risques / impacts
+
+- composants affectés :
+- risques connus :
+- rollback simple ? oui/non
 
 ## Checklist
 
-- [ ] changements testés localement
-- [ ] documentation mise à jour si nécessaire
 - [ ] aucun secret ajouté au diff
-- [ ] impact sur la configuration expliqué
+- [ ] documentation mise à jour si nécessaire
+- [ ] changelog ou roadmap mis à jour si pertinent
+- [ ] prêt pour review
