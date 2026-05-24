@@ -2,19 +2,19 @@
 
 ## Vue d'ensemble
 
-Cette stack part du principe que l'interface agentique reste **Claude Code**, mais que l'inférence est **locale**.
+Cette branche `feat/sans-litellm` supprime la couche LiteLLM par défaut et s'appuie directement sur l'implémentation **Anthropic Messages API** de vLLM.
 
 ```text
-Claude Code
+Claude Code / Client HTTP
    │
-   ├─ Skills (instructions locales)
+   ├─ Skills (instructions locales, côté Claude Code)
    ├─ MCP (capacités externes, à limiter)
    │
    ▼
-LiteLLM Proxy
+Assistant API (FastAPI)
    │
    ▼
-vLLM
+vLLM (Anthropic Messages API)
    │
    ▼
 Qwen3-Coder-30B-A3B-Instruct-AWQ
@@ -40,34 +40,36 @@ Choix par défaut :
 
 - `qwen3_xml`
 
-Raison : plus stable pour les cas de tool calling longs que `qwen3_coder` dans les retours terrain cités.
+Raison : stable pour `Qwen3-Coder-30B-A3B` dans la documentation vLLM officielle.
 
-### 3. Proxy
+### 3. Nom de modèle servi
 
-Le repo garde **LiteLLM** comme couche d'adaptation entre l'interface attendue par Claude Code et l'API servie par vLLM.
+Le dépôt sert maintenant le modèle sous :
 
-### 4. MCP
+- `claude-sonnet-local`
 
-Recommandation : commencer avec **2 MCP seulement** :
+Ce choix évite les `/` dans le nom servi et permet à Claude Code de découvrir le modèle via `/v1/models`.
 
-- `filesystem`
-- `playwright`
+### 4. Claude Code
 
-Puis n'ajouter le reste qu'en cas de besoin réel.
+Claude Code pointe directement vers `http://localhost:8000` avec :
 
-### 5. Skills
+- `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-local`
+- `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-local`
+- `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-sonnet-local`
 
-Les skills servent à déplacer la logique répétitive hors des prompts ponctuels.
+### 5. MCP Tool Search
 
-Le repo inclut 4 skills de base :
+Par prudence, `ENABLE_TOOL_SEARCH=false` est utilisé par défaut sur cette branche.
 
-- `feature-dev`
-- `write-tests`
-- `debug-loop`
-- `git-workflow`
+Sur un hôte non first-party, Claude Code désactive déjà automatiquement le tool search si le backend ne gère pas `tool_reference`. Le forcer à `true` peut rendre la session fragile selon le backend.
 
-## Limites connues
+### 6. API HTTP
 
-- Le comportement exact varie selon la version de Claude Code, LiteLLM et vLLM.
-- Les modèles locaux restent plus fragiles que des modèles frontière pour les tâches très longues.
-- Plus le nombre de MCP actifs augmente, plus le contexte grossit et moins l'expérience est fluide.
+Le dépôt inclut une API FastAPI exposée sur le port `8080`.
+
+Cette couche sert à :
+
+- fournir un point d'entrée REST simple pour une UI ou un script
+- centraliser le modèle, le prompt système et les timeouts
+- dialoguer directement avec un endpoint Anthropic-compatible servi par vLLM

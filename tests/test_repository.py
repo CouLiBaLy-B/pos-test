@@ -13,18 +13,35 @@ EXPECTED_FILES = [
     ROOT / "README.md",
     ROOT / ".env.example",
     ROOT / ".gitignore",
+    ROOT / "Dockerfile.api",
+    ROOT / "Dockerfile.sandbox",
     ROOT / "Makefile",
     ROOT / "docker-compose.yml",
+    ROOT / "requirements.txt",
     ROOT / "requirements-dev.txt",
     ROOT / "CHANGELOG.md",
+    ROOT / "assistant_api" / "config.py",
+    ROOT / "assistant_api" / "main.py",
+    ROOT / "assistant_api" / "models.py",
+    ROOT / "assistant_api" / "service.py",
+    ROOT / "assistant_api" / "static" / "index.html",
     ROOT / "config" / "claude" / "settings.json",
-    ROOT / "config" / "litellm" / "config.yaml",
+    ROOT / "docs" / "api.md",
     ROOT / "docs" / "architecture.md",
+    ROOT / "docs" / "merge-ready.md",
+    ROOT / "docs" / "audit-vllm-claude.md",
     ROOT / "docs" / "models.md",
+    ROOT / "docs" / "sandbox.md",
     ROOT / "docs" / "roadmap-v0.2.0.md",
     ROOT / "docs" / "security.md",
     ROOT / "scripts" / "bootstrap.sh",
     ROOT / "scripts" / "healthcheck.sh",
+    ROOT / "scripts" / "sandbox-down.sh",
+    ROOT / "scripts" / "sandbox-run.sh",
+    ROOT / "scripts" / "sandbox-shell.sh",
+    ROOT / "scripts" / "sandbox-test.sh",
+    ROOT / "scripts" / "sandbox-up.sh",
+    ROOT / "scripts" / "claude-sandbox.sh",
     ROOT / "scripts" / "apply-branch-protection.sh",
     ROOT / "scripts" / "run-tests.sh",
     ROOT / "scripts" / "sync-labels.sh",
@@ -34,6 +51,7 @@ EXPECTED_FILES = [
     ROOT / "skills" / "debug-loop" / "SKILL.md",
     ROOT / "skills" / "feature-dev" / "SKILL.md",
     ROOT / "skills" / "git-workflow" / "SKILL.md",
+    ROOT / "skills" / "sandbox-first" / "SKILL.md",
     ROOT / "skills" / "write-tests" / "SKILL.md",
     ROOT / ".github" / "CODEOWNERS",
     ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md",
@@ -45,6 +63,7 @@ EXPECTED_FILES = [
     ROOT / ".github" / "workflows" / "ci.yml",
     ROOT / ".github" / "workflows" / "pr-labeler.yml",
     ROOT / ".github" / "workflows" / "release.yml",
+    ROOT / "tests" / "test_assistant_api.py",
 ]
 
 
@@ -56,24 +75,15 @@ def test_expected_files_exist() -> None:
 def test_claude_settings_json_is_valid() -> None:
     data = json.loads((ROOT / "config" / "claude" / "settings.json").read_text())
 
-    assert data["env"]["ANTHROPIC_BASE_URL"] == "http://localhost:4000"
-    assert data["env"]["ENABLE_TOOL_SEARCH"] == "true"
+    assert data["env"]["ANTHROPIC_BASE_URL"] == "http://localhost:8000"
+    assert data["env"]["ENABLE_TOOL_SEARCH"] == "false"
+    assert data["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"] == "claude-sonnet-local"
+    assert data["env"]["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"] == "1"
     assert {"filesystem", "playwright"}.issubset(data["mcpServers"].keys())
-    assert any(item.startswith("Bash(git:") for item in data["permissions"]["allow"])
-
-
-def test_litellm_config_is_valid_yaml() -> None:
-    data = yaml.safe_load((ROOT / "config" / "litellm" / "config.yaml").read_text())
-
-    assert "model_list" in data
-    model_names = {item["model_name"] for item in data["model_list"]}
-    assert "claude-3-5-sonnet-20241022" in model_names
-    assert "claude-3-5-haiku-20241022" in model_names
-
-    for item in data["model_list"]:
-        params = item["litellm_params"]
-        assert params["model"] == "openai/qwen3-coder"
-        assert params["api_base"] == "http://vllm:8000/v1"
+    assert any("sandbox-run.sh" in item for item in data["permissions"]["allow"])
+    assert any("claude-sandbox.sh" in item for item in data["permissions"]["allow"])
+    assert any("Bash(git:*)" == item for item in data["permissions"]["deny"])
+    assert any("Bash(python3:*)" == item for item in data["permissions"]["deny"])
 
 
 def test_docker_compose_has_required_services() -> None:
@@ -81,14 +91,24 @@ def test_docker_compose_has_required_services() -> None:
 
     assert "services" in data
     services = data["services"]
-    assert {"vllm", "litellm"}.issubset(services.keys())
+    assert {"vllm", "assistant-api", "assistant-sandbox"}.issubset(services.keys())
+    assert "litellm" not in services
 
     vllm_command = services["vllm"]["command"]
+    vllm_command_text = " ".join(vllm_command)
     assert "--enable-auto-tool-choice" in vllm_command
     assert "--tool-call-parser" in vllm_command
     assert "--enable-prefix-caching" in vllm_command
+    assert "claude-sonnet-local" in vllm_command_text
 
-    assert services["litellm"]["depends_on"]["vllm"]["condition"] == "service_healthy"
+    assert services["assistant-api"]["depends_on"]["vllm"]["condition"] == "service_healthy"
+    assert services["assistant-api"]["environment"]["ASSISTANT_UPSTREAM_BASE_URL"] == "http://vllm:8000"
+    assert services["assistant-sandbox"]["profiles"] == ["sandbox"]
+    assert services["assistant-sandbox"]["working_dir"] == "/workspace"
+    assert services["assistant-sandbox"]["user"] == "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    assert services["assistant-sandbox"]["security_opt"] == ["no-new-privileges:true"]
+    assert services["assistant-sandbox"]["cap_drop"] == ["ALL"]
+    assert services["assistant-sandbox"]["tmpfs"] == ["/tmp"]
 
 
 def test_skills_have_front_matter_and_description() -> None:
@@ -114,6 +134,15 @@ def test_readme_mentions_test_and_setup_commands() -> None:
     assert "make health" in readme
     assert "make setup-claude" in readme
     assert "make test" in readme
+    assert "http://localhost:8080/docs" in readme
+    assert "/api/v1/chat" in readme
+    assert "/api/v1/chat/stream" in readme
+    assert "/v1/messages" in readme
+    assert "sans LiteLLM" in readme
+    assert "make sandbox-shell" in readme
+    assert "make sandbox-test" in readme
+    assert "make claude-sandbox" in readme
+    assert "UID/GID" in readme
 
 
 def test_github_community_files_are_present_and_valid() -> None:
@@ -161,3 +190,36 @@ def test_roadmap_mentions_develop_and_v020() -> None:
     assert "Roadmap v0.2.0" in roadmap
     assert "develop" in roadmap
     assert "main" in roadmap
+
+
+def test_readme_mentions_ui_and_merge_ready() -> None:
+    readme = (ROOT / "README.md").read_text()
+
+    assert "Interface web minimale" in readme
+    assert "merge-ready" in readme.lower()
+
+
+def test_merge_ready_doc_mentions_pr_and_checks() -> None:
+    merge_doc = (ROOT / "docs" / "merge-ready.md").read_text()
+
+    assert "Checklist" in merge_doc
+    assert "develop" in merge_doc
+    assert "PR" in merge_doc
+
+
+def test_sandbox_doc_mentions_profiles_and_workspace() -> None:
+    sandbox_doc = (ROOT / "docs" / "sandbox.md").read_text()
+
+    assert "assistant-sandbox" in sandbox_doc
+    assert "profil Compose `sandbox`" in sandbox_doc or "profil compose `sandbox`" in sandbox_doc.lower()
+    assert "/workspace" in sandbox_doc
+    assert "UID/GID" in sandbox_doc
+    assert "no-new-privileges" in sandbox_doc
+
+
+def test_sandbox_first_skill_mentions_wrappers() -> None:
+    skill = (ROOT / "skills" / "sandbox-first" / "SKILL.md").read_text()
+
+    assert "sandbox-run.sh" in skill
+    assert "sandbox-test.sh" in skill
+    assert "git" in skill.lower()

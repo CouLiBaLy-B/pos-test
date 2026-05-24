@@ -1,9 +1,13 @@
 {
   "env": {
-    "ANTHROPIC_BASE_URL": "http://localhost:4000",
-    "ANTHROPIC_AUTH_TOKEN": "sk-local-dummy",
-    "ANTHROPIC_MODEL": "claude-3-5-sonnet-20241022",
-    "ENABLE_TOOL_SEARCH": "true"
+    "ANTHROPIC_BASE_URL": "http://localhost:8000",
+    "ANTHROPIC_AUTH_TOKEN": "dummy",
+    "ANTHROPIC_API_KEY": "dummy",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-local",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-sonnet-local",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-sonnet-local",
+    "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY": "1",
+    "ENABLE_TOOL_SEARCH": "false"
   },
   "mcpServers": {
     "filesystem": {
@@ -24,16 +28,26 @@
   },
   "permissions": {
     "allow": [
-      "Bash(git:*)",
-      "Bash(npm:*)",
-      "Bash(pnpm:*)",
-      "Bash(yarn:*)",
-      "Bash(pytest:*)",
-      "Bash(python:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose logs:*)",
+      "Bash(docker compose ps:*)",
+      "Bash(./scripts/sandbox-up.sh:*)",
+      "Bash(./scripts/sandbox-down.sh:*)",
+      "Bash(./scripts/sandbox-shell.sh:*)",
+      "Bash(./scripts/sandbox-run.sh:*)",
+      "Bash(./scripts/sandbox-test.sh:*)",
+      "Bash(./scripts/claude-sandbox.sh:*)"
     ],
     "deny": [
-      "Bash(rm -rf /:*)"
+      "Bash(rm -rf /:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pytest:*)",
+      "Bash(npm:*)",
+      "Bash(node:*)",
+      "Bash(yarn:*)",
+      "Bash(pnpm:*)",
+      "Bash(make:*)",
+      "Bash(git:*)"
     ]
   }
 }

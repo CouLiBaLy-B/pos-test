@@ -15,7 +15,7 @@ Faire passer le dépôt d'un bootstrap fonctionnel à une base d'équipe plus ro
 
 ### 2. Fiabilité de la stack locale
 
-- ajouter des checks de santé plus complets pour LiteLLM et vLLM
+- ajouter des checks de santé plus complets pour vLLM et l'API locale
 - documenter les cas d'échec de tool calling
 - ajouter des variantes de configuration selon la VRAM disponible
 
@@ -33,7 +33,7 @@ Faire passer le dépôt d'un bootstrap fonctionnel à une base d'équipe plus ro
 
 ## Backlog proposé
 
-- option vLLM Anthropic native sans LiteLLM
+- documenter la variante historique avec LiteLLM comme fallback optionnel
 - support de modèles alternatifs plus légers
 - stack MCP optionnelle par profil (`minimal`, `browser`, `db`)
 - guide de troubleshooting RTX 4090

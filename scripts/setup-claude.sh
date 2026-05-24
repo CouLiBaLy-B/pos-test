@@ -13,7 +13,7 @@ fi
 
 cp "${ROOT_DIR}/config/claude/settings.json" "${CLAUDE_DIR}/settings.json"
 
-for skill in feature-dev write-tests debug-loop git-workflow; do
+for skill in feature-dev write-tests debug-loop git-workflow sandbox-first; do
   mkdir -p "${SKILLS_DIR}/${skill}"
   cp "${ROOT_DIR}/skills/${skill}/SKILL.md" "${SKILLS_DIR}/${skill}/SKILL.md"
 done
