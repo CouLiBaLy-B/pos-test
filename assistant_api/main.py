@@ -9,7 +9,7 @@ from assistant_api.service import AssistantGateway, UpstreamAPIError
 app = FastAPI(
     title="Assistant API",
     version="0.2.0",
-    description="API REST minimale pour dialoguer avec l'assistant local via LiteLLM et vLLM.",
+    description="API REST minimale pour dialoguer avec l'assistant local via vLLM et l'API Anthropic Messages.",
 )
 
 

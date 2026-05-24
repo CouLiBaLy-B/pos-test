@@ -10,6 +10,15 @@
 - roadmap `v0.2.0`
 - API FastAPI pour interagir avec l'assistant local
 - service Docker `assistant-api` exposé sur le port `8080`
+- branche variante `sans-litellm` avec intégration directe Claude Code -> vLLM
+- rapport d'audit technique vLLM + Claude Code
+
+### Changed
+
+- suppression de LiteLLM du chemin runtime par défaut sur cette branche
+- configuration Claude Code basculée vers les variables `ANTHROPIC_DEFAULT_*_MODEL`
+- modèle servi renommé en `claude-sonnet-local` pour la découverte gateway
+- API locale rendue plus robuste face aux erreurs réseau et URLs mal normalisées
 
 ## v0.1.0 - 2026-05-24
 

@@ -36,6 +36,9 @@ def build_upstream_payload(request: ChatRequest, settings: Settings) -> dict[str
     if request.prompt:
         messages.append({"role": "user", "content": request.prompt})
 
+    if not messages:
+        raise ValueError("At least one user or assistant message is required for the upstream request.")
+
     payload: dict[str, Any] = {
         "model": request.model or settings.model,
         "max_tokens": request.max_tokens or settings.default_max_tokens,
@@ -55,6 +58,18 @@ def build_upstream_payload(request: ChatRequest, settings: Settings) -> dict[str
     return payload
 
 
+def build_upstream_headers(settings: Settings) -> dict[str, str]:
+    headers = {
+        "anthropic-version": settings.anthropic_version,
+        "content-type": "application/json",
+    }
+    if settings.auth_token:
+        headers["authorization"] = f"Bearer {settings.auth_token}"
+    if settings.api_key:
+        headers["x-api-key"] = settings.api_key
+    return headers
+
+
 def _extract_text(content_blocks: list[dict[str, Any]]) -> str:
     texts = [block.get("text", "") for block in content_blocks if block.get("type") == "text"]
     text = "\n".join(part.strip() for part in texts if part and part.strip())
@@ -68,14 +83,13 @@ class AssistantGateway:
     async def chat(self, request: ChatRequest) -> ChatResponse:
         payload = build_upstream_payload(request, self.settings)
         url = f"{self.settings.upstream_base_url}/v1/messages"
-        headers = {
-            "x-api-key": self.settings.auth_token,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        }
+        headers = build_upstream_headers(self.settings)
 
-        async with httpx.AsyncClient(timeout=self.settings.request_timeout) as client:
-            response = await client.post(url, headers=headers, json=payload)
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.request_timeout) as client:
+                response = await client.post(url, headers=headers, json=payload)
+        except httpx.RequestError as exc:
+            raise UpstreamAPIError(502, f"Impossible de joindre l'upstream Anthropic-compatible: {exc}") from exc
 
         if response.is_error:
             detail = response.text

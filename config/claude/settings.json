@@ -1,9 +1,13 @@
 {
   "env": {
-    "ANTHROPIC_BASE_URL": "http://localhost:4000",
-    "ANTHROPIC_AUTH_TOKEN": "sk-local-dummy",
-    "ANTHROPIC_MODEL": "claude-3-5-sonnet-20241022",
-    "ENABLE_TOOL_SEARCH": "true"
+    "ANTHROPIC_BASE_URL": "http://localhost:8000",
+    "ANTHROPIC_AUTH_TOKEN": "dummy",
+    "ANTHROPIC_API_KEY": "dummy",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-local",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-sonnet-local",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-sonnet-local",
+    "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY": "1",
+    "ENABLE_TOOL_SEARCH": "false"
   },
   "mcpServers": {
     "filesystem": {

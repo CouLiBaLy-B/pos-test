@@ -28,7 +28,6 @@ claude-code:
 mcp:
   - changed-files:
       - any-glob-to-any-file:
-          - 'config/litellm/**'
           - 'config/claude/**'
           - 'docs/models.md'
 

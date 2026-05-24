@@ -21,8 +21,10 @@ class ChatRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_input(self) -> "ChatRequest":
-        if not self.prompt and not self.messages:
-            raise ValueError("Either 'prompt' or 'messages' must be provided.")
+        has_prompt = bool(self.prompt and self.prompt.strip())
+        has_conversation_message = any(message.role in {"user", "assistant"} for message in self.messages)
+        if not has_prompt and not has_conversation_message:
+            raise ValueError("Provide 'prompt' or at least one 'user'/'assistant' message.")
         return self
 
 

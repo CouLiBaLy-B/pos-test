@@ -24,9 +24,9 @@ EXPECTED_FILES = [
     ROOT / "assistant_api" / "models.py",
     ROOT / "assistant_api" / "service.py",
     ROOT / "config" / "claude" / "settings.json",
-    ROOT / "config" / "litellm" / "config.yaml",
     ROOT / "docs" / "api.md",
     ROOT / "docs" / "architecture.md",
+    ROOT / "docs" / "audit-vllm-claude.md",
     ROOT / "docs" / "models.md",
     ROOT / "docs" / "roadmap-v0.2.0.md",
     ROOT / "docs" / "security.md",
@@ -64,24 +64,12 @@ def test_expected_files_exist() -> None:
 def test_claude_settings_json_is_valid() -> None:
     data = json.loads((ROOT / "config" / "claude" / "settings.json").read_text())
 
-    assert data["env"]["ANTHROPIC_BASE_URL"] == "http://localhost:4000"
-    assert data["env"]["ENABLE_TOOL_SEARCH"] == "true"
+    assert data["env"]["ANTHROPIC_BASE_URL"] == "http://localhost:8000"
+    assert data["env"]["ENABLE_TOOL_SEARCH"] == "false"
+    assert data["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"] == "claude-sonnet-local"
+    assert data["env"]["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"] == "1"
     assert {"filesystem", "playwright"}.issubset(data["mcpServers"].keys())
     assert any(item.startswith("Bash(git:") for item in data["permissions"]["allow"])
-
-
-def test_litellm_config_is_valid_yaml() -> None:
-    data = yaml.safe_load((ROOT / "config" / "litellm" / "config.yaml").read_text())
-
-    assert "model_list" in data
-    model_names = {item["model_name"] for item in data["model_list"]}
-    assert "claude-3-5-sonnet-20241022" in model_names
-    assert "claude-3-5-haiku-20241022" in model_names
-
-    for item in data["model_list"]:
-        params = item["litellm_params"]
-        assert params["model"] == "openai/qwen3-coder"
-        assert params["api_base"] == "http://vllm:8000/v1"
 
 
 def test_docker_compose_has_required_services() -> None:
@@ -89,15 +77,18 @@ def test_docker_compose_has_required_services() -> None:
 
     assert "services" in data
     services = data["services"]
-    assert {"vllm", "litellm", "assistant-api"}.issubset(services.keys())
+    assert {"vllm", "assistant-api"}.issubset(services.keys())
+    assert "litellm" not in services
 
     vllm_command = services["vllm"]["command"]
+    vllm_command_text = " ".join(vllm_command)
     assert "--enable-auto-tool-choice" in vllm_command
     assert "--tool-call-parser" in vllm_command
     assert "--enable-prefix-caching" in vllm_command
+    assert "claude-sonnet-local" in vllm_command_text
 
-    assert services["litellm"]["depends_on"]["vllm"]["condition"] == "service_healthy"
-    assert services["assistant-api"]["depends_on"]["litellm"]["condition"] == "service_healthy"
+    assert services["assistant-api"]["depends_on"]["vllm"]["condition"] == "service_healthy"
+    assert services["assistant-api"]["environment"]["ASSISTANT_UPSTREAM_BASE_URL"] == "http://vllm:8000"
 
 
 def test_skills_have_front_matter_and_description() -> None:
@@ -125,6 +116,7 @@ def test_readme_mentions_test_and_setup_commands() -> None:
     assert "make test" in readme
     assert "http://localhost:8080/docs" in readme
     assert "/api/v1/chat" in readme
+    assert "sans LiteLLM" in readme
 
 
 def test_github_community_files_are_present_and_valid() -> None:
