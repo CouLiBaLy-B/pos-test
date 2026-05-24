@@ -1,0 +1,11 @@
+.env
+.env.local
+*.log
+*.pid
+.cache/
+dist/
+build/
+__pycache__/
+.pytest_cache/
+.DS_Store
+.claude/local-settings.json

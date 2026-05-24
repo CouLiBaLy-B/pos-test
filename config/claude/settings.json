@@ -1,0 +1,39 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:4000",
+    "ANTHROPIC_AUTH_TOKEN": "sk-local-dummy",
+    "ANTHROPIC_MODEL": "claude-3-5-sonnet-20241022",
+    "ENABLE_TOOL_SEARCH": "true"
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)",
+      "Bash(pytest:*)",
+      "Bash(python:*)",
+      "Bash(docker compose:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /:*)"
+    ]
+  }
+}
